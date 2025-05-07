@@ -1,0 +1,21 @@
+body {
+  font-family: monospace;
+  background: #1e1e1e;
+  color: white;
+  text-align: center;
+  margin: 0;
+}
+#gameContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+canvas {
+  background-color: #2b2b2b;
+  border: 2px solid #ccc;
+}
+button {
+  margin: 5px;
+  padding: 5px 10px;
+}

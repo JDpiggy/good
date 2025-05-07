@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kingdom Forge: Tower Defense</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Kingdom Forge: Tower Defense</h1>
+  <div id="ui">
+    <div>Gold: <span id="gold">100</span></div>
+    <button onclick="placeTower()">Place Tower (50g)</button>
+    <button onclick="placeTroop()">Place Troop (30g)</button>
+    <button onclick="upgradeTower()">Upgrade Tower (100g)</button>
+    <button onclick="mergeTowers()">Merge Towers</button>
+  </div>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="1200" height="800"></canvas>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
