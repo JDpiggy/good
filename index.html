@@ -3,42 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bouncing Bubbles Simulation</title>
+    <title>Richard's ball world</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="simulation-area">
+        <canvas id="simulationCanvas"></canvas>
+    </div>
+
     <div class="controls-container">
-        <h1>Richards bubble world</h1>
+        <h1>Shape Shifter</h1>
         
         <div class="control-group">
-            <label for="numBubbles">Number of Bubbles: <span id="numBubblesValue">50</span></label>
-            <input type="range" id="numBubbles" min="1" max="200" value="50">
+            <label for="shapeType">Shape Type:</label>
+            <select id="shapeType">
+                <option value="circle" selected>Circle</option>
+                <option value="square">Square</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="dodecahedron">Dodecahedron</option>
+                <option value="f35">F-35 (Simple)</option>
+                <option value="pig">Pig (Simple)</option>
+            </select>
         </div>
 
         <div class="control-group">
-            <label for="maxSpeed">Max Initial Speed: <span id="maxSpeedValue">3</span></label>
-            <input type="range" id="maxSpeed" min="0.5" max="10" value="3" step="0.1">
+            <label for="numShapes">Number of Shapes: <span id="numShapesValue">30</span></label>
+            <input type="range" id="numShapes" min="1" max="150" value="30">
         </div>
 
         <div class="control-group">
-            <label for="maxSize">Max Initial Size: <span id="maxSizeValue">20</span></label>
-            <input type="range" id="maxSize" min="5" max="50" value="20" step="1">
+            <label for="maxSpeed">Max Initial Speed: <span id="maxSpeedValue">2.5</span></label>
+            <input type="range" id="maxSpeed" min="0.5" max="8" value="2.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label for="maxSize">Max Size: <span id="maxSizeValue">25</span></label>
+            <input type="range" id="maxSize" min="10" max="60" value="25" step="1">
         </div>
         
         <div class="control-group">
-            <label for="gravity">Gravity: <span id="gravityValue">0.1</span></label>
-            <input type="range" id="gravity" min="0" max="0.5" value="0.1" step="0.01">
+            <label for="gravity">Gravity: <span id="gravityValue">0.08</span></label>
+            <input type="range" id="gravity" min="0" max="0.5" value="0.08" step="0.01">
         </div>
 
         <div class="control-group">
-            <label for="bounceFactor">Bounce Factor: <span id="bounceFactorValue">0.85</span></label>
-            <input type="range" id="bounceFactor" min="0.1" max="1.0" value="0.85" step="0.01">
+            <label for="bounceFactor">Bounce Factor: <span id="bounceFactorValue">0.80</span></label>
+            <input type="range" id="bounceFactor" min="0.1" max="1.0" value="0.80" step="0.01">
+        </div>
+
+        <div class="control-group">
+            <label for="maxSpin">Max Initial Spin: <span id="maxSpinValue">0.05</span></label>
+            <input type="range" id="maxSpin" min="0" max="0.2" value="0.05" step="0.005">
         </div>
 
         <button id="resetButton">Reset Simulation</button>
     </div>
-
-    <canvas id="simulationCanvas"></canvas>
 
     <script src="script.js"></script>
 </body>
