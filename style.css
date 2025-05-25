@@ -4,48 +4,64 @@ body {
     padding: 0;
     background-color: #f0f0f0;
     display: flex;
-    height: 100vh; /* Full viewport height */
-    overflow: hidden; /* Prevent body scrollbars if content overflows slightly */
+    height: 100vh; 
+    overflow: hidden; 
     color: #333;
 }
 
-.simulation-wrapper { /* New wrapper */
+.simulation-wrapper { 
     flex-grow: 1;
-    display: flex; /* To center simulation-area within it */
-    position: relative; /* For potential absolute positioning of canvas in fullscreen */
+    display: flex; 
+    position: relative; 
 }
 
 .simulation-area {
-    /* flex-grow: 1; Let wrapper handle flex grow */
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
-    background-color: #e0e0e0; /* Slightly different background for canvas area */
-    width: 100%; /* Fill the wrapper */
-    height: 100%; /* Fill the wrapper */
+    /* Removed padding from here, will be on canvas/video if needed */
+    background-color: transparent; /* Wrapper sets bg, or video */
+    width: 100%; 
+    height: 100%; 
     box-sizing: border-box;
+    position: relative; /* Crucial for positioning video and canvas */
+    overflow: hidden; /* Clip video edges if they exceed */
+}
+
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover the area, cropping if necessary */
+    z-index: 1; /* Behind the canvas */
+    display: none; /* Hidden by default */
 }
 
 #simulationCanvas {
     border: 2px solid #2c3e50;
-    background-color: #ecf0f1;
+    background-color: #ecf0f1; /* Default background */
     display: block;
     max-width: 100%;
     max-height: 100%;
+    position: relative; /* Ensure it's part of the stacking context */
+    z-index: 2; /* On top of videos */
+    /* Padding can be added here if desired, or on simulation-area */
+    box-sizing: border-box; 
 }
 
 .controls-container {
-    width: 300px; /* Fixed width for controls */
+    width: 300px; 
     min-width: 280px;
     background-color: #fff;
     padding: 20px;
     box-shadow: -4px 0 8px rgba(0,0,0,0.1);
-    overflow-y: auto; /* Allow scrolling if controls exceed height */
+    overflow-y: auto; 
     height: 100vh;
     box-sizing: border-box;
-    display: flex; /* For easier button alignment */
-    flex-direction: column; /* Stack controls vertically */
+    display: flex; 
+    flex-direction: column; 
 }
 
 h1 {
@@ -71,28 +87,29 @@ h1 {
 .control-group select {
     width: 100%;
     cursor: pointer;
-    padding: 5px;
+    padding: 8px; /* Increased padding for select */
     box-sizing: border-box;
-}
-.control-group select {
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+.control-group select {
     background-color: white;
 }
 
-#resetButton, #fullscreenButton { /* Shared styles for buttons */
+
+#resetButton, #fullscreenButton { 
     color: white;
     border: none;
     padding: 12px 20px;
     text-align: center;
     text-decoration: none;
-    display: block; /* Make button full width */
+    display: block; 
     width: 100%;
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin-top: 10px; /* Spacing between buttons */
+    margin-top: 10px; 
 }
 
 #resetButton {
@@ -103,7 +120,7 @@ h1 {
 }
 
 #fullscreenButton {
-    background-color: #2ecc71; /* Green for fullscreen */
+    background-color: #2ecc71; 
 }
 #fullscreenButton:hover {
     background-color: #27ae60;
@@ -118,45 +135,45 @@ body.fullscreen-active .controls-container {
 body.fullscreen-active .simulation-wrapper {
     width: 100vw;
     height: 100vh;
-    padding: 0; /* Remove padding in fullscreen */
-    background-color: #ecf0f1; /* Match canvas background */
+    /* background-color: #ecf0f1; Managed by canvas/video now */
 }
 
 body.fullscreen-active .simulation-area {
-    padding: 0; /* Remove padding */
-    border: none; /* Remove border */
+    border: none; 
 }
 
 body.fullscreen-active #simulationCanvas {
-    border: none; /* Remove canvas border in fullscreen */
+    border: none; 
     max-width: 100%;
     max-height: 100%;
-    width: 100%; /* Ensure it fills */
-    height: 100%; /* Ensure it fills */
+    width: 100%; 
+    height: 100%; 
+}
+body.fullscreen-active .video-background {
+    /* Ensure video also fills fullscreen */
+    width: 100%;
+    height: 100%;
 }
 
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
-    body:not(.fullscreen-active) { /* Only apply when NOT fullscreen */
+    body:not(.fullscreen-active) { 
         flex-direction: column;
-        height: auto; /* Allow body to grow */
+        height: auto; 
         overflow-y: auto;
     }
     .controls-container {
         width: 100%;
-        height: auto; /* Auto height for controls on small screens */
+        height: auto; 
         max-height: none;
         box-shadow: 0 -4px 8px rgba(0,0,0,0.1);
-        order: 1; /* Controls below canvas */
+        order: 1; 
     }
-    .simulation-wrapper { /* Adjust wrapper for column layout */
-        order: 0; /* Canvas above controls */
+    .simulation-wrapper { 
+        order: 0; 
         width: 100%;
-        height: 60vh; /* Give canvas a good portion of height */
+        height: 60vh; 
         min-height: 300px;
-    }
-    .simulation-area {
-        padding: 10px;
     }
 }
