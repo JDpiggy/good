@@ -1,21 +1,69 @@
 body {
-  font-family: monospace;
-  background: #1e1e1e;
-  color: white;
-  text-align: center;
-  margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #333;
 }
-#gameContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
+
+.controls-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin: 20px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
 }
-canvas {
-  background-color: #2b2b2b;
-  border: 2px solid #ccc;
+
+h1 {
+    color: #2c3e50;
+    margin-top: 0;
 }
-button {
-  margin: 5px;
-  padding: 5px 10px;
+
+.control-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+
+#resetButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#resetButton:hover {
+    background-color: #2980b9;
+}
+
+#simulationCanvas {
+    border: 2px solid #2c3e50;
+    background-color: #ecf0f1;
+    display: block; /* Removes extra space below canvas */
+    margin: 0 auto; /* Centers canvas if smaller than viewport */
+    max-width: 100%; /* Ensure canvas is responsive */
 }
