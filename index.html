@@ -7,8 +7,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="simulation-wrapper"> <!-- New wrapper for fullscreen target -->
+    <div class="simulation-wrapper">
         <div class="simulation-area">
+            <!-- Video backgrounds will go here, behind the canvas -->
+            <video id="videoBg1" class="video-background" loop muted playsinline preload="auto">
+                <!-- IMPORTANT: Replace with your actual GitHub raw link -->
+                <source src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO_NAME/main/assets/tiles/illusion%201.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <video id="videoBg2" class="video-background" loop muted playsinline preload="auto">
+                <!-- IMPORTANT: Replace with your actual GitHub raw link -->
+                <source src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO_NAME/main/assets/tiles/illusion%202.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
             <canvas id="simulationCanvas"></canvas>
         </div>
     </div>
@@ -16,6 +27,18 @@
     <div class="controls-container">
         <h1>Shape Shifter</h1>
         
+        <div class="control-group">
+            <label for="backgroundOption">Background:</label>
+            <select id="backgroundOption">
+                <option value="default" selected>Default (Light Gray)</option>
+                <option value="black">Black</option>
+                <option value="darkblue">Dark Blue</option>
+                <option value="illusion1">Illusion 1 (Video)</option>
+                <option value="illusion2">Illusion 2 (Video)</option>
+                <option value="transparent">Transparent (Shapes Only)</option>
+            </select>
+        </div>
+
         <div class="control-group">
             <label for="shapeType">Shape Type:</label>
             <select id="shapeType">
@@ -59,7 +82,7 @@
         </div>
 
         <button id="resetButton">Reset Simulation</button>
-        <button id="fullscreenButton">Toggle Fullscreen</button> <!-- New Button -->
+        <button id="fullscreenButton">Toggle Fullscreen</button>
     </div>
 
     <script src="script.js"></script>
