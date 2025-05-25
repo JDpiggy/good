@@ -1,22 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Kingdom Forge: Tower Defense</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Bubbles Simulation</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Kingdom Forge: Tower Defense</h1>
-  <div id="ui">
-    <div>Gold: <span id="gold">100</span></div>
-    <button onclick="placeTower()">Place Tower (50g)</button>
-    <button onclick="placeTroop()">Place Troop (30g)</button>
-    <button onclick="upgradeTower()">Upgrade Tower (100g)</button>
-    <button onclick="mergeTowers()">Merge Towers</button>
-  </div>
-  <div id="gameContainer">
-    <canvas id="gameCanvas" width="1200" height="800"></canvas>
-  </div>
-  <script src="script.js"></script>
+    <div class="controls-container">
+        <h1>Bouncing Bubbles</h1>
+        
+        <div class="control-group">
+            <label for="numBubbles">Number of Bubbles: <span id="numBubblesValue">50</span></label>
+            <input type="range" id="numBubbles" min="1" max="200" value="50">
+        </div>
+
+        <div class="control-group">
+            <label for="maxSpeed">Max Initial Speed: <span id="maxSpeedValue">3</span></label>
+            <input type="range" id="maxSpeed" min="0.5" max="10" value="3" step="0.1">
+        </div>
+
+        <div class="control-group">
+            <label for="maxSize">Max Initial Size: <span id="maxSizeValue">20</span></label>
+            <input type="range" id="maxSize" min="5" max="50" value="20" step="1">
+        </div>
+        
+        <div class="control-group">
+            <label for="gravity">Gravity: <span id="gravityValue">0.1</span></label>
+            <input type="range" id="gravity" min="0" max="0.5" value="0.1" step="0.01">
+        </div>
+
+        <div class="control-group">
+            <label for="bounceFactor">Bounce Factor: <span id="bounceFactorValue">0.85</span></label>
+            <input type="range" id="bounceFactor" min="0.1" max="1.0" value="0.85" step="0.01">
+        </div>
+
+        <button id="resetButton">Reset Simulation</button>
+    </div>
+
+    <canvas id="simulationCanvas"></canvas>
+
+    <script src="script.js"></script>
 </body>
 </html>
