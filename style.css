@@ -4,30 +4,48 @@ body {
     padding: 0;
     background-color: #f0f0f0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent body scrollbars if content overflows slightly */
     color: #333;
 }
 
+.simulation-area {
+    flex-grow: 1; /* Takes up remaining space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #e0e0e0; /* Slightly different background for canvas area */
+}
+
+#simulationCanvas {
+    border: 2px solid #2c3e50;
+    background-color: #ecf0f1;
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
 .controls-container {
+    width: 300px; /* Fixed width for controls */
+    min-width: 280px;
     background-color: #fff;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    margin: 20px;
-    width: 90%;
-    max-width: 500px;
-    text-align: center;
+    box-shadow: -4px 0 8px rgba(0,0,0,0.1);
+    overflow-y: auto; /* Allow scrolling if controls exceed height */
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 h1 {
     color: #2c3e50;
     margin-top: 0;
+    text-align: center;
+    font-size: 1.8em;
 }
 
 .control-group {
     margin-bottom: 15px;
-    text-align: left;
 }
 
 .control-group label {
@@ -35,35 +53,65 @@ h1 {
     margin-bottom: 5px;
     font-weight: bold;
     color: #555;
+    font-size: 0.9em;
 }
 
-.control-group input[type="range"] {
+.control-group input[type="range"],
+.control-group select {
     width: 100%;
     cursor: pointer;
+    padding: 5px;
+    box-sizing: border-box;
+}
+.control-group select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
 }
 
 #resetButton {
     background-color: #3498db;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
+    display: block; /* Make button full width */
+    width: 100%;
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-top: 20px;
 }
 
 #resetButton:hover {
     background-color: #2980b9;
 }
 
-#simulationCanvas {
-    border: 2px solid #2c3e50;
-    background-color: #ecf0f1;
-    display: block; /* Removes extra space below canvas */
-    margin: 0 auto; /* Centers canvas if smaller than viewport */
-    max-width: 100%; /* Ensure canvas is responsive */
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        height: auto; /* Allow body to grow */
+        overflow-y: auto;
+    }
+    .controls-container {
+        width: 100%;
+        height: auto; /* Auto height for controls on small screens */
+        max-height: none;
+        box-shadow: 0 -4px 8px rgba(0,0,0,0.1);
+        order: 1; /* Controls below canvas */
+    }
+    .simulation-area {
+        order: 0; /* Canvas above controls */
+        height: 60vh; /* Give canvas a good portion of height */
+        min-height: 300px;
+        padding: 10px;
+    }
+    #simulationCanvas {
+       /* Ensure canvas fits within its area */
+       width: auto; 
+       height: auto;
+    }
 }
