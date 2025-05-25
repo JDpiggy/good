@@ -1,135 +1,163 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
 
-let gold = 100;
-let frame = 0;
+    // Control elements
+    const numBubblesInput = document.getElementById('numBubbles');
+    const maxSpeedInput = document.getElementById('maxSpeed');
+    const maxSizeInput = document.getElementById('maxSize');
+    const gravityInput = document.getElementById('gravity');
+    const bounceFactorInput = document.getElementById('bounceFactor');
+    const resetButton = document.getElementById('resetButton');
 
-const TILE_SIZE = 40;
-const towers = [];
-const troops = [];
-let enemies = [];
+    // Value display spans
+    const numBubblesValueSpan = document.getElementById('numBubblesValue');
+    const maxSpeedValueSpan = document.getElementById('maxSpeedValue');
+    const maxSizeValueSpan = document.getElementById('maxSizeValue');
+    const gravityValueSpan = document.getElementById('gravityValue');
+    const bounceFactorValueSpan = document.getElementById('bounceFactorValue');
 
-const grass = new Image();
-grass.src = 'assets/tiles/grass.png';
+    let bubbles = [];
+    let animationFrameId;
 
-const enemyTypes = [
-  { color: "red", speed: 1, hp: 100 },
-  { color: "blue", speed: 2, hp: 70 },
-  { color: "green", speed: 0.5, hp: 200 }
-];
+    // Set canvas dimensions
+    function resizeCanvas() {
+        canvas.width = Math.min(window.innerWidth * 0.9, 800); // Adjust as needed
+        canvas.height = Math.min(window.innerHeight * 0.6, 600); // Adjust as needed
+        initSimulation(); // Re-initialize on resize
+    }
 
-function drawMap() {
-  ctx.drawImage(grass, 0, 0, canvas.width, canvas.height);
-}
+    window.addEventListener('resize', resizeCanvas);
 
-function drawCircleUnit(x, y, color, radius) {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();
-}
+    // Bubble class
+    class Bubble {
+        constructor(x, y, radius, dx, dy, color) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.dx = dx; // horizontal velocity
+            this.dy = dy; // vertical velocity
+            this.color = color;
+            this.mass = this.radius * 0.1; // Simple mass based on radius
+        }
 
-function drawHealthBar(x, y, hp, maxHp) {
-  ctx.fillStyle = "red";
-  ctx.fillRect(x - 20, y - 30, 40, 5);
-  ctx.fillStyle = "lime";
-  ctx.fillRect(x - 20, y - 30, 40 * (hp / maxHp), 5);
-}
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.closePath();
+        }
 
-function spawnEnemy() {
-  const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-  enemies.push({ x: 0, y: 100 + Math.random() * 500, ...type, maxHp: type.hp });
-}
+        update() {
+            // Apply gravity
+            this.dy += parseFloat(gravityInput.value);
 
-function updateEnemies() {
-  for (const e of enemies) {
-    e.x += e.speed;
-  }
-  enemies = enemies.filter(e => e.hp > 0 && e.x < canvas.width);
-}
+            // Move
+            this.x += this.dx;
+            this.y += this.dy;
 
-function drawEnemies() {
-  for (const e of enemies) {
-    drawCircleUnit(e.x, e.y, e.color, 20);
-    drawHealthBar(e.x, e.y, e.hp, e.maxHp);
-  }
-}
+            const bounce = parseFloat(bounceFactorInput.value);
 
-function placeTower() {
-  if (gold >= 50) {
-    towers.push({ x: 300, y: 300, damage: 10, level: 1 });
-    gold -= 50;
-    updateGold();
-  }
-}
+            // Collision with walls
+            // Right wall
+            if (this.x + this.radius > canvas.width) {
+                this.x = canvas.width - this.radius;
+                this.dx *= -bounce;
+            }
+            // Left wall
+            if (this.x - this.radius < 0) {
+                this.x = this.radius;
+                this.dx *= -bounce;
+            }
+            // Bottom wall
+            if (this.y + this.radius > canvas.height) {
+                this.y = canvas.height - this.radius;
+                this.dy *= -bounce;
+                // Apply some friction on ground bounce
+                this.dx *= 0.98; 
+            }
+            // Top wall
+            if (this.y - this.radius < 0) {
+                this.y = this.radius;
+                this.dy *= -bounce;
+            }
+        }
+    }
 
-function upgradeTower() {
-  if (gold >= 100 && towers.length > 0) {
-    towers[0].damage += 10;
-    towers[0].level += 1;
-    gold -= 100;
-    updateGold();
-  }
-}
+    function getRandomColor() {
+        const r = Math.floor(Math.random() * 200 + 55); // Brighter colors
+        const g = Math.floor(Math.random() * 200 + 55);
+        const b = Math.floor(Math.random() * 200 + 55);
+        return `rgb(${r},${g},${b})`;
+    }
 
-function mergeTowers() {
-  if (towers.length >= 2 && towers[0].level === towers[1].level) {
-    towers[0].damage += towers[1].damage;
-    towers[0].level += 1;
-    towers.splice(1, 1);
-    updateGold();
-  }
-}
+    function initSimulation() {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        bubbles = [];
+        const numBubbles = parseInt(numBubblesInput.value);
+        const maxSpeed = parseFloat(maxSpeedInput.value);
+        const maxSize = parseFloat(maxSizeInput.value);
+        const minSize = 5; // Minimum bubble size
 
-function drawTowers() {
-  towers.forEach(t => drawCircleUnit(t.x, t.y, "white", 20));
-}
+        for (let i = 0; i < numBubbles; i++) {
+            const radius = Math.random() * (maxSize - minSize) + minSize;
+            // Ensure bubbles don't spawn inside walls
+            const x = Math.random() * (canvas.width - 2 * radius) + radius;
+            const y = Math.random() * (canvas.height - 2 * radius) + radius;
+            // Random direction and speed
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * maxSpeed + 0.5; // Add a minimum speed
+            const dx = Math.cos(angle) * speed;
+            const dy = Math.sin(angle) * speed;
+            const color = getRandomColor();
+            bubbles.push(new Bubble(x, y, radius, dx, dy, color));
+        }
+        animate();
+    }
 
-function placeTroop() {
-  if (gold >= 30) {
-    troops.push({ x: 200, y: 200, damage: 5, range: 60 });
-    gold -= 30;
-    updateGold();
-  }
-}
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        bubbles.forEach(bubble => {
+            bubble.update();
+            bubble.draw();
+        });
 
-function drawTroops() {
-  troops.forEach(t => drawCircleUnit(t.x, t.y, "orange", 12));
-}
+        animationFrameId = requestAnimationFrame(animate);
+    }
 
-function attackEnemies() {
-  [...towers, ...troops].forEach(unit => {
-    enemies.forEach(enemy => {
-      const dx = enemy.x - unit.x;
-      const dy = enemy.y - unit.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 100) {
-        enemy.hp -= unit.damage;
-        if (enemy.hp <= 0) gold += 10;
-      }
-    });
-  });
-  updateGold();
-}
+    // Update display values and re-initialize if necessary
+    function setupEventListeners() {
+        const inputsToReset = [numBubblesInput, maxSpeedInput, maxSizeInput];
+        inputsToReset.forEach(input => {
+            input.addEventListener('input', () => {
+                updateDisplayValues();
+                initSimulation();
+            });
+        });
 
-function updateGold() {
-  document.getElementById("gold").textContent = gold;
-}
+        // These inputs can change live without full reset
+        const liveUpdateInputs = [gravityInput, bounceFactorInput];
+        liveUpdateInputs.forEach(input => {
+            input.addEventListener('input', updateDisplayValues);
+        });
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawMap();
-  drawEnemies();
-  drawTowers();
-  drawTroops();
-  updateEnemies();
-  attackEnemies();
+        resetButton.addEventListener('click', initSimulation);
+    }
+    
+    function updateDisplayValues() {
+        numBubblesValueSpan.textContent = numBubblesInput.value;
+        maxSpeedValueSpan.textContent = parseFloat(maxSpeedInput.value).toFixed(1);
+        maxSizeValueSpan.textContent = maxSizeInput.value;
+        gravityValueSpan.textContent = parseFloat(gravityInput.value).toFixed(2);
+        bounceFactorValueSpan.textContent = parseFloat(bounceFactorInput.value).toFixed(2);
+    }
 
-  frame++;
-  if (frame % 180 === 0) spawnEnemy();
-
-  requestAnimationFrame(gameLoop);
-}
-
-grass.onload = () => gameLoop();
+    // Initial setup
+    resizeCanvas(); // Set initial canvas size and start simulation
+    updateDisplayValues();
+    setupEventListeners();
+});
