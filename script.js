@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('simulationCanvas');
     const ctx = canvas.getContext('2d');
+    const simulationWrapper = document.querySelector('.simulation-wrapper'); // Get the wrapper
 
     // Control elements
     const shapeTypeInput = document.getElementById('shapeType');
@@ -11,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bounceFactorInput = document.getElementById('bounceFactor');
     const maxSpinInput = document.getElementById('maxSpin');
     const resetButton = document.getElementById('resetButton');
+    const fullscreenButton = document.getElementById('fullscreenButton'); // New button
 
     // Value display spans
     const numShapesValueSpan = document.getElementById('numShapesValue');
@@ -23,27 +25,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let shapes = [];
     let animationFrameId;
 
-    function resizeCanvas() {
-        const simArea = document.querySelector('.simulation-area');
-        const controlsContainer = document.querySelector('.controls-container');
-        let availableWidth = window.innerWidth;
-        if (window.innerWidth > 768) { // If controls are on the side
-            availableWidth -= controlsContainer.offsetWidth;
+    function setCanvasDimensions() {
+        const simArea = document.querySelector('.simulation-area'); // Use simulation-area for sizing
+        
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        } else {
+            const controlsContainer = document.querySelector('.controls-container');
+            let availableWidth = window.innerWidth;
+            let availableHeight = window.innerHeight;
+            const padding = 20; // Padding inside simulation-area
+
+            if (window.innerWidth > 768) { // Controls are on the side
+                availableWidth -= controlsContainer.offsetWidth;
+                canvas.width = Math.min(availableWidth - (padding * 2) , 1200); // Max width
+                canvas.height = Math.min(availableHeight - (padding * 2), 800); // Max height
+            } else { // Controls are on bottom (or top if order changed)
+                availableHeight -= controlsContainer.offsetHeight;
+                canvas.width = Math.min(availableWidth - (padding * 2), 1200);
+                canvas.height = Math.min(availableHeight - (padding * 2), 700);
+            }
+
+            // Ensure canvas fits within its simulation-area container if it's smaller
+            canvas.width = Math.min(canvas.width, simArea.clientWidth - (simArea.style.padding ? parseInt(simArea.style.padding) * 2 : 0));
+            canvas.height = Math.min(canvas.height, simArea.clientHeight - (simArea.style.padding ? parseInt(simArea.style.padding) * 2 : 0));
+
+
+             // Fallback if calculated dimensions are too small
+            if (canvas.width < 100) canvas.width = simArea.clientWidth > 100 ? simArea.clientWidth - (padding*2) : 300;
+            if (canvas.height < 100) canvas.height = simArea.clientHeight > 100 ? simArea.clientHeight - (padding*2) : 200;
         }
-        
-        const padding = 40; // Total padding in simulation-area
-        canvas.width = Math.min(availableWidth - padding, 1000); 
-        canvas.height = Math.min(simArea.offsetHeight - padding, 700);
-        
-        // Fallback if offsetHeight is 0 (e.g. display:none initially)
-        if (canvas.height < 100) canvas.height = window.innerHeight * 0.6;
-        if (canvas.width < 100) canvas.width = window.innerWidth * 0.6;
-
-
-        initSimulation();
     }
 
-    window.addEventListener('resize', resizeCanvas);
+
+    function resizeCanvasAndReinit() {
+        setCanvasDimensions();
+        initSimulation(); // Re-initialize on resize
+    }
+
+    function resizeCanvasOnly() {
+        setCanvasDimensions();
+        // No re-initialization, shapes continue in new space
+        // This is useful for fullscreen toggle
+    }
+
+    window.addEventListener('resize', resizeCanvasAndReinit);
 
     class Shape {
         constructor(x, y, size, dx, dy, color, shapeType, angularVelocity) {
@@ -54,24 +81,23 @@ document.addEventListener('DOMContentLoaded', () => {
             this.dy = dy;
             this.color = color;
             this.shapeType = shapeType;
-            this.angle = Math.random() * Math.PI * 2; // Initial random angle
+            this.angle = Math.random() * Math.PI * 2;
             this.angularVelocity = angularVelocity;
             
-            // For rectangles, store width/height based on size
             if (this.shapeType === 'rectangle') {
-                const aspect = Math.random() * 0.8 + 0.4; // Random aspect ratio (0.4 to 1.2)
-                if (Math.random() < 0.5) { // Taller or wider
+                const aspect = Math.random() * 0.8 + 0.4; 
+                if (Math.random() < 0.5) { 
                     this.width = this.size;
                     this.height = this.size * aspect;
                 } else {
                     this.width = this.size * aspect;
                     this.height = this.size;
                 }
-            } else { // For squares and others where width/height are same as size
+            } else { 
                 this.width = this.size;
                 this.height = this.size;
             }
-            this.mass = (this.width * this.height) * 0.005; // Mass loosely based on area
+            this.mass = (this.width * this.height) * 0.005;
         }
 
         draw() {
@@ -79,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.translate(this.x, this.y);
             ctx.rotate(this.angle);
             ctx.fillStyle = this.color;
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)'; // Slight outline
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)'; 
             ctx.lineWidth = 1;
 
             switch (this.shapeType) {
@@ -120,70 +146,43 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.restore();
         }
         
-        // Simplified F-35 (points define a path scaled by this.size)
         drawF35() {
-            const s = this.size / 20; // Scale factor
+            const s = this.size / 20; 
             ctx.beginPath();
-            // Body and nose
-            ctx.moveTo(0 * s, -10 * s); // Nose tip
-            ctx.lineTo(2 * s, -3 * s);
-            ctx.lineTo(1.5 * s, 2 * s);
-            ctx.lineTo(5 * s, 5 * s);   // Wing front
-            ctx.lineTo(7 * s, 4 * s);   // Wing tip
-            ctx.lineTo(3 * s, 2.5 * s);
-            ctx.lineTo(3.5 * s, 7 * s); // Tail wing
-            ctx.lineTo(2.5 * s, 8 * s); // Tail tip
-            ctx.lineTo(1.5 * s, 6 * s);
-            ctx.lineTo(0 * s, 7 * s);   // Exhaust center
-            // Mirror (simplified)
-            ctx.lineTo(-1.5 * s, 6 * s);
-            ctx.lineTo(-2.5 * s, 8 * s);
-            ctx.lineTo(-3.5 * s, 7 * s);
-            ctx.lineTo(-3 * s, 2.5 * s);
-            ctx.lineTo(-7 * s, 4 * s);
-            ctx.lineTo(-5 * s, 5 * s);
-            ctx.lineTo(-1.5 * s, 2 * s);
-            ctx.lineTo(-2 * s, -3 * s);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
+            ctx.moveTo(0 * s, -10 * s); 
+            ctx.lineTo(2 * s, -3 * s); ctx.lineTo(1.5 * s, 2 * s);
+            ctx.lineTo(5 * s, 5 * s);   ctx.lineTo(7 * s, 4 * s);  
+            ctx.lineTo(3 * s, 2.5 * s); ctx.lineTo(3.5 * s, 7 * s); 
+            ctx.lineTo(2.5 * s, 8 * s); ctx.lineTo(1.5 * s, 6 * s);
+            ctx.lineTo(0 * s, 7 * s);  
+            ctx.lineTo(-1.5 * s, 6 * s); ctx.lineTo(-2.5 * s, 8 * s);
+            ctx.lineTo(-3.5 * s, 7 * s); ctx.lineTo(-3 * s, 2.5 * s);
+            ctx.lineTo(-7 * s, 4 * s); ctx.lineTo(-5 * s, 5 * s);
+            ctx.lineTo(-1.5 * s, 2 * s); ctx.lineTo(-2 * s, -3 * s);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
         }
 
-        // Simplified Pig
         drawPig() {
-            const s = this.size / 20; // Scale factor
+            const s = this.size / 20; 
             ctx.beginPath();
-            // Head / Snout
-            ctx.ellipse(0, 0, 7*s, 5*s, 0, 0, Math.PI * 2); // Main body
-            ctx.fill();
-            ctx.stroke();
+            ctx.ellipse(0, 0, 7*s, 5*s, 0, 0, Math.PI * 2); 
+            ctx.fill(); ctx.stroke();
             
-            ctx.beginPath(); // Snout
+            ctx.beginPath(); 
             ctx.ellipse(-6*s, 0, 2.5*s, 2*s, -0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            ctx.fill(); ctx.stroke();
             
-            ctx.beginPath(); // Ear 1
-            ctx.moveTo(1*s, -4*s);
-            ctx.quadraticCurveTo(3*s, -7*s, 5*s, -5*s);
-            ctx.fill();
-            ctx.stroke();
+            ctx.beginPath(); 
+            ctx.moveTo(1*s, -4*s); ctx.quadraticCurveTo(3*s, -7*s, 5*s, -5*s);
+            ctx.fill(); ctx.stroke();
 
-            ctx.beginPath(); // Ear 2
-            ctx.moveTo(0*s, -4.5*s);
-            ctx.quadraticCurveTo(1.5*s, -7.5*s, 3.5*s, -5.5*s);
-            ctx.fill();
-            ctx.stroke();
+            ctx.beginPath(); 
+            ctx.moveTo(0*s, -4.5*s); ctx.quadraticCurveTo(1.5*s, -7.5*s, 3.5*s, -5.5*s);
+            ctx.fill(); ctx.stroke();
             
-            // Tiny legs (simple rects, not rotated with body for extreme simplicity here)
-            // To do them properly, they'd need to be part of the main rotated context
-            // For now, let's skip legs to keep it simpler or make them very abstract.
-            // The current ctx.translate/rotate applies to all drawing within this drawPig() call
-            // So if we draw legs, they WILL rotate with the body.
-            ctx.fillRect(-3*s, 4*s, 1.5*s, 3*s); // Front leg
-            ctx.fillRect(1*s, 4*s, 1.5*s, 3*s);  // Back leg
+            ctx.fillRect(-3*s, 4*s, 1.5*s, 3*s); 
+            ctx.fillRect(1*s, 4*s, 1.5*s, 3*s);  
         }
-
 
         update() {
             this.dy += parseFloat(gravityInput.value);
@@ -192,32 +191,24 @@ document.addEventListener('DOMContentLoaded', () => {
             this.angle += this.angularVelocity;
 
             const bounce = parseFloat(bounceFactorInput.value);
-            // Collision detection uses this.size / 2 as a general radius.
-            // This is an approximation for non-circular shapes.
             const effectiveRadius = Math.max(this.width, this.height) / 2;
 
-
             if (this.x + effectiveRadius > canvas.width) {
-                this.x = canvas.width - effectiveRadius;
-                this.dx *= -bounce;
-                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dx)/maxSpeedInput.value); // Spin on bounce
+                this.x = canvas.width - effectiveRadius; this.dx *= -bounce;
+                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dx)/ (parseFloat(maxSpeedInput.value) + 0.1) );
             }
             if (this.x - effectiveRadius < 0) {
-                this.x = effectiveRadius;
-                this.dx *= -bounce;
-                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dx)/maxSpeedInput.value);
+                this.x = effectiveRadius; this.dx *= -bounce;
+                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dx)/ (parseFloat(maxSpeedInput.value) + 0.1));
             }
             if (this.y + effectiveRadius > canvas.height) {
-                this.y = canvas.height - effectiveRadius;
-                this.dy *= -bounce;
-                this.dx *= 0.98; // Friction on ground
-                this.angularVelocity *= 0.95; // Dampen spin on ground
-                if (Math.abs(this.dy) < 0.1) this.dy = 0; // Settle
+                this.y = canvas.height - effectiveRadius; this.dy *= -bounce;
+                this.dx *= 0.98; this.angularVelocity *= 0.95; 
+                if (Math.abs(this.dy) < parseFloat(gravityInput.value) * 2 && parseFloat(gravityInput.value) > 0) this.dy = 0; // Settle better
             }
             if (this.y - effectiveRadius < 0) {
-                this.y = effectiveRadius;
-                this.dy *= -bounce;
-                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dy)/maxSpeedInput.value);
+                this.y = effectiveRadius; this.dy *= -bounce;
+                this.angularVelocity += (Math.random() - 0.5) * 0.05 * (Math.abs(this.dy)/ (parseFloat(maxSpeedInput.value) + 0.1));
             }
         }
     }
@@ -234,26 +225,26 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelAnimationFrame(animationFrameId);
         }
         shapes = [];
-        const numShapes = parseInt(numShapesInput.value);
-        const maxSpeed = parseFloat(maxSpeedInput.value);
-        const SmaxSize = parseFloat(maxSizeInput.value); // S for Shape
-        const minSize = SmaxSize * 0.3 < 10 ? SmaxSize * 0.3 : 10; // Minimum shape size
+        const numShapesVal = parseInt(numShapesInput.value);
+        const maxSpeedVal = parseFloat(maxSpeedInput.value);
+        const SmaxSizeVal = parseFloat(maxSizeInput.value);
+        const minSize = SmaxSizeVal * 0.3 < 10 ? SmaxSizeVal * 0.3 : 10;
         const currentShapeType = shapeTypeInput.value;
         const currentMaxSpin = parseFloat(maxSpinInput.value);
 
-        for (let i = 0; i < numShapes; i++) {
-            const size = Math.random() * (SmaxSize - minSize) + minSize;
-            // Calculate effective radius for initial placement based on shape type
-            // For simplicity, we'll use 'size' as a general proxy for diameter here.
-            // More accurate would be to calculate bounding box after rotation if known,
-            // but for random initial spawn, 'size' is a good enough estimate.
-            const spawnMargin = size / 1.8; // ensure even rotated shapes spawn inside
+        for (let i = 0; i < numShapesVal; i++) {
+            const size = Math.random() * (SmaxSizeVal - minSize) + minSize;
+            const spawnMargin = size / 1.8; 
 
-            const x = Math.random() * (canvas.width - 2 * spawnMargin) + spawnMargin;
-            const y = Math.random() * (canvas.height - 2 * spawnMargin) + spawnMargin;
-            
+            let x = Math.random() * (canvas.width - 2 * spawnMargin) + spawnMargin;
+            let y = Math.random() * (canvas.height - 2 * spawnMargin) + spawnMargin;
+            // Ensure spawn is within bounds, even if canvas is tiny
+            x = Math.max(spawnMargin, Math.min(x, canvas.width - spawnMargin));
+            y = Math.max(spawnMargin, Math.min(y, canvas.height - spawnMargin));
+
+
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * maxSpeed + 0.2;
+            const speed = Math.random() * maxSpeedVal + 0.2;
             const dx = Math.cos(angle) * speed;
             const dy = Math.sin(angle) * speed;
             const color = getRandomColor();
@@ -261,9 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             shapes.push(new Shape(x, y, size, dx, dy, color, currentShapeType, angularVelocity));
         }
-        if (!animationFrameId || shapes.length > 0) { // Start animation if not already running or if shapes exist
-             animate();
-        }
+        // Ensure animation starts/restarts
+        if (animationFrameId) cancelAnimationFrame(animationFrameId); // Clear previous frame
+        animate();
     }
 
     function animate() {
@@ -282,8 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputsToReset.forEach(input => {
             input.addEventListener('input', () => {
                 updateDisplayValues();
-                // Debounce or delay initSimulation if performance is an issue for rapid slider changes
-                // For now, direct call is fine.
+                setCanvasDimensions(); // Ensure canvas dimensions are updated before init
                 initSimulation(); 
             });
         });
@@ -294,10 +284,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         resetButton.addEventListener('click', () => {
-            // Ensure display values are current before re-init
             updateDisplayValues(); 
+            setCanvasDimensions(); // Ensure canvas dimensions are updated before init
             initSimulation();
         });
+
+        fullscreenButton.addEventListener('click', toggleFullScreen);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     }
     
     function updateDisplayValues() {
@@ -309,8 +305,55 @@ document.addEventListener('DOMContentLoaded', () => {
         maxSpinValueSpan.textContent = parseFloat(maxSpinInput.value).toFixed(3);
     }
 
+    function toggleFullScreen() {
+        const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+        if (!fsElement) {
+            // Go fullscreen on the simulationWrapper for better control
+            if (simulationWrapper.requestFullscreen) {
+                simulationWrapper.requestFullscreen();
+            } else if (simulationWrapper.webkitRequestFullscreen) { /* Safari */
+                simulationWrapper.webkitRequestFullscreen();
+            } else if (simulationWrapper.mozRequestFullScreen) { /* Firefox */
+                simulationWrapper.mozRequestFullScreen();
+            } else if (simulationWrapper.msRequestFullscreen) { /* IE/Edge */
+                simulationWrapper.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) { /* Firefox */
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) { /* IE/Edge */
+                document.msExitFullscreen();
+            }
+        }
+    }
+
+    function handleFullscreenChange() {
+        const fsElement = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        if (fsElement) {
+            document.body.classList.add('fullscreen-active');
+            fullscreenButton.textContent = "Exit Fullscreen";
+        } else {
+            document.body.classList.remove('fullscreen-active');
+            fullscreenButton.textContent = "Toggle Fullscreen";
+        }
+        // Resize canvas without re-initializing shapes
+        // A short delay can help ensure the DOM has updated for new dimensions
+        setTimeout(() => {
+            resizeCanvasOnly(); 
+            // We might need to adjust shape positions if they are outside the new bounds
+            // For now, let's see how it behaves.
+            // A more robust solution might iterate shapes and clamp them to new bounds.
+        }, 50); 
+    }
+
+
     // Initial setup
-    updateDisplayValues(); // Set initial display values from defaults
-    resizeCanvas(); // Set initial canvas size and start simulation
+    updateDisplayValues();
+    resizeCanvasAndReinit(); // Set initial canvas size and start simulation
     setupEventListeners();
 });
